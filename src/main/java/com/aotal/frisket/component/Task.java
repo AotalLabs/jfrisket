@@ -5,6 +5,8 @@ import com.aotal.frisket.service.DecompressService;
 import com.aotal.frisket.service.QueueService;
 import com.aotal.frisket.service.StorageService;
 import org.apache.commons.compress.archivers.ArchiveException;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -24,13 +26,15 @@ public class Task {
     private final StorageService storageService;
     private final DecompressService decompressService;
     private final ConversionService conversionService;
+    private final Tracer tracer;
 
     @Inject
-    public Task(QueueService queueService, StorageService storageService, DecompressService decompressService, ConversionService conversionService) {
+    public Task(QueueService queueService, StorageService storageService, DecompressService decompressService, ConversionService conversionService, Tracer tracer) {
         this.queueService = queueService;
         this.storageService = storageService;
         this.decompressService = decompressService;
         this.conversionService = conversionService;
+        this.tracer = tracer;
     }
 
     @Scheduled(fixedDelay = 1)
@@ -44,21 +48,51 @@ public class Task {
             Thread.sleep(1000);
             return;
         }
-        InputStream stream = storageService.getDocument(filename);
+        Span sp = tracer.createSpan("Process Task");
+        try {
+            InputStream stream;
+            Span getDocumentSp = tracer.createSpan("GetObject", sp);
+            try {
+                stream = storageService.getDocument(filename);
+            } finally {
+                tracer.close(getDocumentSp);
+            }
+            Path processingDir = null;
+            Path processedDir = null;
+            try {
+                processingDir = Files.createTempDirectory("processing");
+                try {
+                    processedDir = Files.createTempDirectory("processed");
 
-        // Java does not handle directories incredibly well and there are too many error cases to manually delete the created directories
-        // If an exception ever occurs then there will be stale records and the container will start to bloat
-        Path processingDir = Files.createTempDirectory("processing");
-        Path processedDir = Files.createTempDirectory("processed");
+                    Span decompressSp = tracer.createSpan("Decompressing File", sp);
+                    try {
+                        decompressService.decompress(stream, processingDir);
+                    } finally {
+                        tracer.close(decompressSp);
+                    }
 
-        decompressService.decompress(stream, processingDir);
+                    Span conversionSp = tracer.createSpan("Converting Files", sp);
+                    try {
+                        conversionService.convert(conversionSp, processingDir, processedDir, filename);
+                    } finally {
+                        tracer.close(conversionSp);
+                    }
 
-        conversionService.convert(processingDir, processedDir, filename);
-
-        Path converted = processedDir.resolve(filename + ".pdf");
-        storageService.uploadDocument(filename + ".pdf", Files.newInputStream(converted));
-
-        Files.delete(processingDir);
-        Files.delete(processedDir);
+                    Path converted = processedDir.resolve(filename + ".pdf");
+                    Span putSp = tracer.createSpan("Put Object", sp);
+                    try {
+                        storageService.uploadDocument(filename + ".pdf", Files.newInputStream(converted));
+                    } finally {
+                        tracer.close(putSp);
+                    }
+                } finally {
+                    Files.delete(processedDir);
+                }
+            } finally {
+                Files.delete(processingDir);
+            }
+        } finally {
+            tracer.close(sp);
+        }
     }
 }

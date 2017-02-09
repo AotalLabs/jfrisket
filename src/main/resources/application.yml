@@ -1,0 +1,23 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ${APP_SHORTCODE:gutenberg}
+  zipkin:
+    baseUrl: http://zipkin.tasupstreams.com:9411/
+  sleuth:
+    sampler:
+      percentage: 1.0
+  boot:
+    admin:
+      url: http://spring-admin.monitoring:8080
+      auto-deregistration: true
+      client:
+        prefer-ip: true
+  output:
+    ansi:
+      enabled: ALWAYS
+
+management:
+  port: 8081
