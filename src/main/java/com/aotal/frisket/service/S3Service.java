@@ -36,11 +36,6 @@ public class S3Service implements StorageService {
     }
 
     @Override
-    public boolean documentExists(String filename) {
-        return s3.doesObjectExist(DONE_BUCKET, filename);
-    }
-
-    @Override
     public void uploadDocument(String filename, InputStream in) throws IOException {
         s3.putObject(DONE_BUCKET, filename, in, null);
     }
@@ -49,14 +44,9 @@ public class S3Service implements StorageService {
     public void uploadError(String filename, String error, int code) throws IOException {
         ObjectMetadata meta = new ObjectMetadata();
         meta.addUserMetadata("Error", error);
-        meta.addUserMetadata("Respone", "" + code);
+        meta.addUserMetadata("Response", "" + code);
         CopyObjectRequest copyObjectRequest = new CopyObjectRequest(PENDING_BUCKET, filename, ERROR_BUCKET, filename).withNewObjectMetadata(meta);
         s3.copyObject(copyObjectRequest);
-    }
-
-    @Override
-    public void removeDocument(String filename) {
-        s3.deleteObject(PENDING_BUCKET, filename);
     }
 
     @Override

@@ -18,14 +18,6 @@ public interface StorageService {
     boolean documentPending(String filename);
 
     /**
-     * Checks that a Document exists in the storage service
-     *
-     * @param filename
-     * @return the downloaded File
-     */
-    boolean documentExists(String filename);
-
-    /**
      * Uploads the file data to the storage service under the given filename
      *
      * @param filename
@@ -43,13 +35,6 @@ public interface StorageService {
      * @throws IOException
      */
     void uploadError(String filename, String error, int code) throws IOException;
-
-    /**
-     * Removes the file from the storage service
-     *
-     * @param filename
-     */
-    void removeDocument(String filename);
 
     /**
      * Retrieves the specified document from the storage servicea
