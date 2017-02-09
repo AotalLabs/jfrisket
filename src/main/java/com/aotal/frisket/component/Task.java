@@ -5,6 +5,8 @@ import com.aotal.frisket.service.DecompressService;
 import com.aotal.frisket.service.QueueService;
 import com.aotal.frisket.service.StorageService;
 import org.apache.commons.compress.archivers.ArchiveException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,6 +23,8 @@ import java.nio.file.Path;
  */
 @Component
 public class Task {
+
+    private static Logger logger = LoggerFactory.getLogger(Task.class);
 
     private final QueueService queueService;
     private final StorageService storageService;
@@ -56,6 +60,7 @@ public class Task {
                 stream = storageService.getDocument(filename);
             } catch (Exception e) {
                 storageService.uploadError(filename, "Could not find " + filename, 404);
+                logger.debug("Could not find " + filename, e);
                 return;
             } finally {
                 tracer.close(getDocumentSp);
@@ -72,12 +77,15 @@ public class Task {
                         decompressService.decompress(stream, processingDir);
                     } catch (IOException e) {
                         storageService.uploadError(filename, "Could not decompress file", 530);
+                        logger.debug("Could not decompress file", e);
                         return;
                     } catch (ArchiveException e) {
                         storageService.uploadError(filename, "Could not decompress file", 532);
+                        logger.debug("Could not decompress file", e);
                         return;
                     } catch (Exception e) {
                         storageService.uploadError(filename, "Severe decompress error", 500);
+                        logger.debug("Severe decompress error", e);
                         return;
                     } finally {
                         tracer.close(decompressSp);
@@ -88,9 +96,11 @@ public class Task {
                         conversionService.convert(conversionSp, processingDir, processedDir, filename);
                     } catch (IOException e) {
                         storageService.uploadError(filename, "File conversion error", 500);
+                        logger.debug("File conversion error", e);
                         return;
                     } catch (Exception e) {
                         storageService.uploadError(filename, "Severe conversion error", 500);
+                        logger.debug("Severe conversion error", e);
                         return;
                     } finally {
                         tracer.close(conversionSp);
@@ -102,6 +112,7 @@ public class Task {
                         storageService.uploadDocument(filename + ".pdf", Files.newInputStream(converted));
                     } catch (Exception e) {
                         storageService.uploadError(filename, "Could not upload result", 500);
+                        logger.debug("Could not upload result", e);
                     } finally {
                         tracer.close(putSp);
                     }

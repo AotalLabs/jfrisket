@@ -1,6 +1,8 @@
 package com.aotal.frisket.service;
 
 import org.apache.tika.Tika;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,8 @@ import java.util.stream.Stream;
  */
 @Service
 public class ConversionServiceImpl implements ConversionService {
+
+    private static Logger logger = LoggerFactory.getLogger(ConversionServiceImpl.class);
 
     private final Tika tika;
     private final Tracer tracer;
@@ -49,7 +53,7 @@ public class ConversionServiceImpl implements ConversionService {
                         files.add(path.toString());
                 }
             } catch (IOException e) {
-                // Can't do anything
+                logger.debug("Conversion exception", e);
             }
         });
 
