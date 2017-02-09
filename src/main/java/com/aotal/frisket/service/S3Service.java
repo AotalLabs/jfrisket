@@ -1,6 +1,8 @@
 package com.aotal.frisket.service;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.CopyObjectRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -44,8 +46,12 @@ public class S3Service implements StorageService {
     }
 
     @Override
-    public void uploadError(String filename, InputStream in) throws IOException {
-        s3.putObject(ERROR_BUCKET, filename, in, null);
+    public void uploadError(String filename, String error, int code) throws IOException {
+        ObjectMetadata meta = new ObjectMetadata();
+        meta.addUserMetadata("Error", error);
+        meta.addUserMetadata("Respone", "" + code);
+        CopyObjectRequest copyObjectRequest = new CopyObjectRequest(PENDING_BUCKET, filename, ERROR_BUCKET, filename).withNewObjectMetadata(meta);
+        s3.copyObject(copyObjectRequest);
     }
 
     @Override

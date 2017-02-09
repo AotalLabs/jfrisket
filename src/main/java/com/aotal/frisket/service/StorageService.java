@@ -38,10 +38,11 @@ public interface StorageService {
      * Uploads the file data to the storage service under the given filename
      *
      * @param filename
-     * @param in
+     * @param error
+     * @param code
      * @throws IOException
      */
-    void uploadError(String filename, InputStream in) throws IOException;
+    void uploadError(String filename, String error, int code) throws IOException;
 
     /**
      * Removes the file from the storage service

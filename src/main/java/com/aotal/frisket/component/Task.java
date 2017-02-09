@@ -54,6 +54,9 @@ public class Task {
             Span getDocumentSp = tracer.createSpan("GetObject", sp);
             try {
                 stream = storageService.getDocument(filename);
+            } catch (Exception e) {
+                storageService.uploadError(filename, "Could not find " + filename, 404);
+                return;
             } finally {
                 tracer.close(getDocumentSp);
             }
@@ -67,6 +70,15 @@ public class Task {
                     Span decompressSp = tracer.createSpan("Decompressing File", sp);
                     try {
                         decompressService.decompress(stream, processingDir);
+                    } catch (IOException e) {
+                        storageService.uploadError(filename, "Could not decompress file", 530);
+                        return;
+                    } catch (ArchiveException e) {
+                        storageService.uploadError(filename, "Could not decompress file", 532);
+                        return;
+                    } catch (Exception e) {
+                        storageService.uploadError(filename, "Severe decompress error", 500);
+                        return;
                     } finally {
                         tracer.close(decompressSp);
                     }
@@ -74,6 +86,12 @@ public class Task {
                     Span conversionSp = tracer.createSpan("Converting Files", sp);
                     try {
                         conversionService.convert(conversionSp, processingDir, processedDir, filename);
+                    } catch (IOException e) {
+                        storageService.uploadError(filename, "File conversion error", 500);
+                        return;
+                    } catch (Exception e) {
+                        storageService.uploadError(filename, "Severe conversion error", 500);
+                        return;
                     } finally {
                         tracer.close(conversionSp);
                     }
@@ -82,6 +100,8 @@ public class Task {
                     Span putSp = tracer.createSpan("Put Object", sp);
                     try {
                         storageService.uploadDocument(filename + ".pdf", Files.newInputStream(converted));
+                    } catch (Exception e) {
+                        storageService.uploadError(filename, "Could not upload result", 500);
                     } finally {
                         tracer.close(putSp);
                     }
