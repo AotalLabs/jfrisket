@@ -1,0 +1,107 @@
+buildscript {
+    repositories {
+        jcenter()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.4.2.RELEASE")
+    }
+}
+
+plugins {
+    id "io.spring.dependency-management" version "0.6.0.RELEASE"
+    id "java"
+    id "maven"
+    id "idea"
+    id "org.sonarqube" version "2.2"
+    id "jacoco"
+    id "org.unbroken-dome.test-sets" version "1.2.0"
+    id "info.solidsoft.pitest" version "1.1.4"
+}
+
+repositories {
+    def creds = {
+        username nexusUsername
+        password nexusPassword
+    }
+
+    maven {
+        url nexusMavenUrl
+        credentials creds
+    }
+
+    maven {
+        url nexusUrl
+        credentials creds
+    }
+}
+
+testSets {
+    integrationTest
+}
+
+apply plugin: "org.springframework.boot"
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Camden.SR3"
+        mavenBom 'com.amazonaws:aws-java-sdk-bom:1.10.77'
+    }
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+sourceSets.main {
+    resources {
+        srcDirs 'src/main/resources', 'src/main/webapp'
+    }
+}
+
+dependencies {
+    compile "org.springframework.boot:spring-boot-starter-web"
+    compile "org.springframework.boot:spring-boot-starter-actuator"
+    compile "org.springframework.boot:spring-boot-configuration-processor"
+    compile "org.springframework.boot:spring-boot-starter-thymeleaf"
+    compile "org.springframework.boot:spring-boot-devtools"
+    compile "org.springframework.cloud:spring-cloud-sleuth-zipkin"
+    compile 'com.amazonaws:aws-java-sdk-s3'
+    compile 'com.amazonaws:aws-java-sdk-sqs'
+
+    compile "commons-io:commons-io:2.5"
+    compile "org.apache.commons:commons-compress:1.13"
+
+    compile "org.aspectj:aspectjweaver"
+
+    compile "de.codecentric:spring-boot-admin-starter-client:1.4.3"
+
+    compile "io.prometheus:simpleclient:0.0.18"
+    compile "io.prometheus:simpleclient_common:0.0.18"
+    compile "io.prometheus:simpleclient_spring_boot:0.0.18"
+
+    compile "javax.inject:javax.inject:1"
+
+    compile 'org.apache.tika:tika-core:1.4'
+
+    testCompile "org.springframework.boot:spring-boot-starter-test"
+    testCompile "com.pholser:junit-quickcheck-core:0.6.1"
+    testCompile "com.pholser:junit-quickcheck-generators:0.6.1"
+}
+
+jar {
+    baseName = "app"
+}
+
+sonarqube {
+    properties["sonar.pitest.mode"] = "reuseReport"
+    properties["sonar.pitest.reportsDirectory"] = "build/reports/pitest"
+}
+
+pitest {
+    targetClasses = ["com.aotal.frisket.*"]
+    targetTests = ["com.aotal.frisket.*"]
+    outputFormats = ["XML", "HTML"]
+}
