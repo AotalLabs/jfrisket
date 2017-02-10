@@ -112,7 +112,7 @@ public class Task {
                         storageService.uploadDocument(filename + ".pdf", converted.toFile());
                     } catch (Exception e) {
                         storageService.uploadError(filename, "Could not upload result", 500);
-                        logger.info("Could not upload result", e);
+                        logger.debug("Could not upload result", e);
                     } finally {
                         tracer.close(putSp);
                     }
