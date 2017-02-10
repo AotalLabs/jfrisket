@@ -117,9 +117,23 @@ public class Task {
                         tracer.close(putSp);
                     }
                 } finally {
+                    Files.list(processedDir).forEach(path -> {
+                        try {
+                            Files.delete(path);
+                        } catch (IOException e) {
+                            // Welp we tried
+                        }
+                    });
                     Files.delete(processedDir);
                 }
             } finally {
+                Files.list(processingDir).forEach(path -> {
+                    try {
+                        Files.delete(path);
+                    } catch (IOException e) {
+                        // Welp we tried
+                    }
+                });
                 Files.delete(processingDir);
             }
         } finally {
