@@ -44,7 +44,7 @@ public class S3ServiceTest {
     @Test
     public void testUploadDocumentCallsCorrectBucket() throws IOException {
         service.uploadDocument(null, null);
-        verify(s3, times(1)).putObject(DONE_BUCKET, null, null, null);
+        verify(s3, times(1)).putObject(DONE_BUCKET, null, null);
     }
 
     @Test

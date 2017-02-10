@@ -1,5 +1,6 @@
 package com.aotal.frisket.service;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -21,10 +22,10 @@ public interface StorageService {
      * Uploads the file data to the storage service under the given filename
      *
      * @param filename
-     * @param in
+     * @param file
      * @throws IOException
      */
-    void uploadDocument(String filename, InputStream in) throws IOException;
+    void uploadDocument(String filename, File file) throws IOException;
 
     /**
      * Uploads the file data to the storage service under the given filename

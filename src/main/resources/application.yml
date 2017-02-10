@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: ${APP_SHORTCODE:gutenberg}
+    name: ${APP_SHORTCODE:jfrisket}
   zipkin:
     baseUrl: http://zipkin.tasupstreams.com:9411/
   sleuth:
