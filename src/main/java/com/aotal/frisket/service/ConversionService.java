@@ -18,5 +18,5 @@ public interface ConversionService {
      * @param to
      * @param filename
      */
-    void convert(Span span, Path from, Path to, String filename) throws IOException;
+    void convert(Span span, Path from, Path to, String filename) throws IOException, InterruptedException;
 }
