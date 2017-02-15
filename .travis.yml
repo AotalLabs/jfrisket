@@ -1,0 +1,15 @@
+sudo: required
+
+language: java
+
+services:
+  - docker
+
+install:
+  - ./gradlew clean build
+after_success:
+  - if [ "$TRAVIS_BRANCH" == "master" ]; then
+    docker build -t aotallabs/jfrisket:$TRAVIS_BUILD_NUMBER
+    docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
+    docker push aotallabs/jfrisket;
+    fi
