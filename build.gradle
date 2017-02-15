@@ -16,34 +16,13 @@ plugins {
     id "java"
     id "maven"
     id "idea"
-    id "org.sonarqube" version "2.2"
-    id "jacoco"
-    id "org.unbroken-dome.test-sets" version "1.2.0"
-    id "info.solidsoft.pitest" version "1.1.4"
-}
-
-repositories {
-    def creds = {
-        username nexusUsername
-        password nexusPassword
-    }
-
-    maven {
-        url nexusMavenUrl
-        credentials creds
-    }
-
-    maven {
-        url nexusUrl
-        credentials creds
-    }
-}
-
-testSets {
-    integrationTest
 }
 
 apply plugin: "org.springframework.boot"
+
+repositories {
+    mavenCentral()
+}
 
 dependencyManagement {
     imports {
@@ -51,9 +30,6 @@ dependencyManagement {
         mavenBom 'com.amazonaws:aws-java-sdk-bom:1.10.77'
     }
 }
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
 
 sourceSets.main {
     resources {
@@ -93,15 +69,4 @@ dependencies {
 
 jar {
     baseName = "app"
-}
-
-sonarqube {
-    properties["sonar.pitest.mode"] = "reuseReport"
-    properties["sonar.pitest.reportsDirectory"] = "build/reports/pitest"
-}
-
-pitest {
-    targetClasses = ["com.aotal.frisket.*"]
-    targetTests = ["com.aotal.frisket.*"]
-    outputFormats = ["XML", "HTML"]
 }
