@@ -7,8 +7,8 @@ services:
 
 script:
   - docker run -it -v $(pwd):/root/sources -w /root/sources openjdk:8 ./gradlew clean build
-  - if [ ${TRAVIS_BRANCH} == "master" ]; then
-        docker build -t aotallabs/jfrisket:${TRAVIS_BUILD_NUMBER} .;
-        docker login -u=${DOCKER_USER} -p={$DOCKER_PASSWORD};
-        docker push aotallabs/jfrisket:${TRAVIS_BUILD_NUMBER};
+  - if [ "$TRAVIS_BRANCH" == "master" ]; then
+        docker build -t aotallabs/jfrisket:"$TRAVIS_BUILD_NUMBER" .;
+        docker login -u="$DOCKER_USER" -p="$DOCKER_PASSWORD";
+        docker push aotallabs/jfrisket:"$TRAVIS_BUILD_NUMBER";
     fi
