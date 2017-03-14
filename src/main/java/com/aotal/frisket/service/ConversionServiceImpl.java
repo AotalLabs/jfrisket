@@ -70,7 +70,7 @@ public class ConversionServiceImpl implements ConversionService {
         } finally {
             tracer.close(dos2unixSp);
         }
-        ProcessBuilder libre = new ProcessBuilder(Stream.concat(Stream.of("lowriter", "--invisible", "--convert-to", "pdf:writer_pdf_Export:UTF8", "--outdir", "processed"), files.stream()).collect(Collectors.toList()));
+        ProcessBuilder libre = new ProcessBuilder(Stream.concat(Stream.of("lowriter", "--invisible", "--convert-to", "pdf:writer_pdf_Export:UTF8", "--outdir", to.toString()), files.stream()).collect(Collectors.toList()));
         Span libreSp = tracer.createSpan("Libreoffice Converting", span);
         try {
             libre.start().waitFor();
