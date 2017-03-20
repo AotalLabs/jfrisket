@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -36,8 +37,8 @@ public class S3Service implements StorageService {
     }
 
     @Override
-    public void uploadDocument(String filename, InputStream in) throws IOException {
-        s3.putObject(DONE_BUCKET, filename, in, null);
+    public void uploadDocument(String filename, File in) throws IOException {
+        s3.putObject(DONE_BUCKET, filename, in);
     }
 
     @Override

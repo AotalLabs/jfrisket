@@ -109,7 +109,7 @@ public class Task {
                     Path converted = processedDir.resolve(filename + ".pdf");
                     Span putSp = tracer.createSpan("Put Object", sp);
                     try {
-                        storageService.uploadDocument(filename + ".pdf", Files.newInputStream(converted));
+                        storageService.uploadDocument(filename + ".pdf", converted.toFile());
                     } catch (Exception e) {
                         storageService.uploadError(filename, "Could not upload result", 500);
                         logger.debug("Could not upload result", e);

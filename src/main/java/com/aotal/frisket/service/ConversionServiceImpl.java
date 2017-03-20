@@ -46,9 +46,12 @@ public class ConversionServiceImpl implements ConversionService {
                         break;
                     case "text/html":
                     case "text/htm":
-                        ProcessBuilder pb = new ProcessBuilder("wkhtmltopdf", "--quiet", path.toString(), to.resolve(path.getFileName()).toString());
+                        ProcessBuilder pb = new ProcessBuilder("wkhtmltopdf", "--quiet", "-", to.resolve(path.getFileName()).toString());
                         try {
-                            pb.start().waitFor();
+                            Process p = pb.start();
+                            p.getOutputStream().write(Files.readAllBytes(path));
+                            p.getOutputStream().close();
+                            p.waitFor();
                         } catch (InterruptedException e) {
                             // Deliberaterly left blank
                         }
