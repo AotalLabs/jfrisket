@@ -82,7 +82,7 @@ public class ConversionServiceImpl implements ConversionService {
         } finally {
             tracer.close(libreSp);
         }
-        ProcessBuilder gs = new ProcessBuilder(Stream.concat(Stream.of("gs", "-dBATCH", "-dNOPAUSE", "-dPDFFitPage", "-q", "-sOwnerPassword=reallylongandsecurepassword", "-sDEVICE=pdfwrite", "-sOutputFile=" + to.resolve(filename).toString() + ".pdf"), Files.list(to).map(Path::toString)).collect(Collectors.toList()));
+        ProcessBuilder gs = new ProcessBuilder(Stream.concat(Stream.of("gs", "-dBATCH", "-dNOPAUSE", "-dPDFFitPage", "-q", "-sOwnerPassword=reallylongandsecurepassword", "-sDEVICE=pdfwrite", "-sOutputFile=" + to.resolve(filename).toString() + ".pdf"), Files.list(to).map(Path::toString)).sorted().collect(Collectors.toList()));
         Span gsSp = tracer.createSpan("Stitching", span);
         try {
             gs.start().waitFor();
