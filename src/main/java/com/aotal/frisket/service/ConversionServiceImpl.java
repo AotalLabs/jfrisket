@@ -64,23 +64,25 @@ public class ConversionServiceImpl implements ConversionService {
             }
         });
 
-        ProcessBuilder dos2unix = new ProcessBuilder(Stream.concat(Stream.of("dos2unix", "--quiet"), files.stream()).collect(Collectors.toList()));
-        Span dos2unixSp = tracer.createSpan("Dos2Unix converting", span);
-        try {
-            dos2unix.start().waitFor();
-        } catch (InterruptedException e) {
-            // Deliberaterly left blank
-        } finally {
-            tracer.close(dos2unixSp);
-        }
-        ProcessBuilder libre = new ProcessBuilder(Stream.concat(Stream.of("lowriter", "--invisible", "--convert-to", "pdf:writer_pdf_Export:UTF8", "--outdir", to.toString()), files.stream()).collect(Collectors.toList()));
-        Span libreSp = tracer.createSpan("Libreoffice Converting", span);
-        try {
-            libre.start().waitFor();
-        } catch (InterruptedException e) {
-            // Deliberaterly left blank
-        } finally {
-            tracer.close(libreSp);
+        if (files.size() > 0) {
+            ProcessBuilder dos2unix = new ProcessBuilder(Stream.concat(Stream.of("dos2unix", "--quiet"), files.stream()).collect(Collectors.toList()));
+            Span dos2unixSp = tracer.createSpan("Dos2Unix converting", span);
+            try {
+                dos2unix.start().waitFor();
+            } catch (InterruptedException e) {
+                // Deliberaterly left blank
+            } finally {
+                tracer.close(dos2unixSp);
+            }
+            ProcessBuilder libre = new ProcessBuilder(Stream.concat(Stream.of("lowriter", "--invisible", "--convert-to", "pdf:writer_pdf_Export:UTF8", "--outdir", to.toString()), files.stream()).collect(Collectors.toList()));
+            Span libreSp = tracer.createSpan("Libreoffice Converting", span);
+            try {
+                libre.start().waitFor();
+            } catch (InterruptedException e) {
+                // Deliberaterly left blank
+            } finally {
+                tracer.close(libreSp);
+            }
         }
         ProcessBuilder gs = new ProcessBuilder(Stream.concat(Stream.of("gs", "-dBATCH", "-dNOPAUSE", "-dPDFFitPage", "-q", "-sOwnerPassword=reallylongandsecurepassword", "-sDEVICE=pdfwrite", "-sOutputFile=" + to.resolve(filename).toString() + ".pdf"), Files.list(to).map(Path::toString).sorted(String::compareTo)).collect(Collectors.toList()));
         Span gsSp = tracer.createSpan("Stitching", span);
