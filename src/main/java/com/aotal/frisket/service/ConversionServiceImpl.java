@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -74,15 +75,11 @@ public class ConversionServiceImpl implements ConversionService {
             } finally {
                 tracer.close(dos2unixSp);
             }
-            ProcessBuilder libre = new ProcessBuilder(Stream.concat(Stream.of("lowriter", "--invisible", "--convert-to", "pdf:writer_pdf_Export:UTF8", "--outdir", to.toString()), files.stream()).collect(Collectors.toList()));
-            Span libreSp = tracer.createSpan("Libreoffice Converting", span);
-            try {
-                libre.start().waitFor();
-            } catch (InterruptedException e) {
-                // Deliberaterly left blank
-            } finally {
-                tracer.close(libreSp);
-            }
+            int BATCH = 25;
+            IntStream.range(0, (files.size() + BATCH - 1) / BATCH)
+                    .mapToObj(i -> files.subList(i * BATCH, Math.min(files.size(), (i + 1) * BATCH)))
+                    .forEach(batch -> process(batch, to.toString(), span));
+
         }
         ProcessBuilder gs = new ProcessBuilder(Stream.concat(Stream.of("gs", "-dBATCH", "-dNOPAUSE", "-dPDFFitPage", "-q", "-sOwnerPassword=reallylongandsecurepassword", "-sDEVICE=pdfwrite", "-sOutputFile=" + to.resolve(filename).toString() + ".pdf"), Files.list(to).map(Path::toString).sorted(String::compareTo)).collect(Collectors.toList()));
         Span gsSp = tracer.createSpan("Stitching", span);
@@ -92,6 +89,18 @@ public class ConversionServiceImpl implements ConversionService {
             // Deliberaterly left blank
         } finally {
             tracer.close(gsSp);
+        }
+    }
+
+    private void process(List<String> batch, String outdir, Span span) {
+        ProcessBuilder libre = new ProcessBuilder(Stream.concat(Stream.of("lowriter", "--invisible", "--convert-to", "pdf:writer_pdf_Export:UTF8", "--outdir", outdir), batch.stream()).collect(Collectors.toList()));
+        Span libreSp = tracer.createSpan("Libreoffice Converting", span);
+        try {
+            libre.start().waitFor();
+        } catch (Exception e) {
+            // Deliberaterly left blank
+        } finally {
+            tracer.close(libreSp);
         }
     }
 }
