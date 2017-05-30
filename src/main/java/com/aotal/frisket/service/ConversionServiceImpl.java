@@ -12,10 +12,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -28,11 +29,13 @@ public class ConversionServiceImpl implements ConversionService {
 
     private final Tika tika;
     private final Tracer tracer;
+    private final StorageService storageService;
 
     @Inject
-    public ConversionServiceImpl(Tika tika, Tracer tracer) {
+    public ConversionServiceImpl(Tika tika, Tracer tracer, StorageService storageService) {
         this.tika = tika;
         this.tracer = tracer;
+        this.storageService = storageService;
     }
 
     @Override
@@ -76,18 +79,24 @@ public class ConversionServiceImpl implements ConversionService {
             } finally {
                 tracer.close(dos2unixSp);
             }
-            ProcessBuilder libre = new ProcessBuilder(Stream.concat(Stream.of("lowriter", "--invisible", "--convert-to", "pdf:writer_pdf_Export:UTF8", "--outdir", to.toString()), files.stream()).collect(Collectors.toList()));
-            Span libreSp = tracer.createSpan("Libreoffice Converting", span);
-            try {
-                Process p = libre.start();
-                if (!p.waitFor(1, TimeUnit.MINUTES)) {
-                    p.destroy();
-                    throw new IOException("Failed to convert all documents");
+            for (String file : files) {
+                ProcessBuilder libre = new ProcessBuilder(Arrays.asList("lowriter", "--invisible", "--convert-to", "pdf:writer_pdf_Export:UTF8", "--outdir", to.toString(), file));
+                Span libreSp = tracer.createSpan("Libreoffice Converting", span);
+                try {
+                    Process p = libre.start();
+                    if (!p.waitFor(5, TimeUnit.SECONDS)) {
+                        //if (!p.destroyForcibly().waitFor(1, TimeUnit.MINUTES)) {
+                            // Something is terribly broken at this stage
+                            //storageService.uploadError(filename, "Severe conversion error", 500);
+                            //System.exit(1);
+                        //}
+                        //throw new IOException("Failed to convert " + file);
+                    }
+                } catch (InterruptedException e) {
+                    // Deliberaterly left blank
+                } finally {
+                    tracer.close(libreSp);
                 }
-            } catch (InterruptedException e) {
-                // Deliberaterly left blank
-            } finally {
-                tracer.close(libreSp);
             }
 
         }
